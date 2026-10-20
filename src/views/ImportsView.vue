@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import * as XLSX from 'xlsx'
 
-import { DATA_TYPES, type FieldDef, type TypeDef } from '@/data/schema'
+import { fetchHistory, type ImportRecordItem } from '@/api/imports'
+import { fetchTypes, type FieldDef, type TypeDef } from '@/api/schema'
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.id
-const activeType = ref<TypeDef>(DATA_TYPES[0]!)
+const types = ref<TypeDef[]>([])
+const activeType = ref<TypeDef>({ code: '', name: '', description: null, fields: [] })
+const loading = ref(true)
+const history = ref<ImportRecordItem[]>([])
 const file = ref<File | null>(null)
 const header = ref<string[]>([]) // 文件表头
 const sample = ref<string[]>([]) // 第一行样例值
@@ -16,6 +20,31 @@ const submitting = ref(false)
 const errorMsg = ref('')
 const okMsg = ref('')
 const requiredFields = computed(() => activeType.value.fields.filter((f) => f.required))
+
+// 页面打开时拉字段字典 + 导入历史
+onMounted(async () => {
+  await Promise.all([loadTypes(), loadHistory()])
+})
+
+async function loadTypes() {
+  try {
+    types.value = await fetchTypes()
+    if (types.value.length) activeType.value = types.value[0]!
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : '加载数据类型失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadHistory() {
+  try {
+    history.value = await fetchHistory()
+  } catch {
+    /* 历史加载失败不打扰用户 */
+  }
+}
+
 function selectType(t: TypeDef) {
   if (activeType.value.code === t.code) return
   activeType.value = t
@@ -114,7 +143,9 @@ async function submit() {
       throw new Error(typeof detail === 'string' ? detail : '导入失败')
     }
     const data = await res.json()
-    okMsg.value = `导入成功，写入 ${data?.row_count ?? '?'} 行`
+    const dropped = data?.dropped ?? 0
+    okMsg.value = `导入成功：写入 ${data?.row_count ?? '?'} 行${dropped ? `，丢弃 ${dropped} 行` : ''}`
+    await loadHistory()
     file.value = null
     header.value = []
     sample.value = []
@@ -138,10 +169,11 @@ async function submit() {
       <!-- 左侧：类型选择 -->
       <aside class="sidebar">
         <p class="side-title muted">数据类型</p>
-        <button v-for="t in DATA_TYPES" :key="t.code" class="type-item" :class="{ active: t.code === activeType.code }"
+        <p v-if="loading" class="muted small">加载中…</p>
+        <button v-for="t in types" :key="t.code" class="type-item" :class="{ active: t.code === activeType.code }"
           @click="selectType(t)">
           <span class="type-name">{{ t.name }}</span>
-          <span class="type-desc muted">{{ t.desc }}</span>
+          <span class="type-desc muted">{{ t.description }}</span>
         </button>
       </aside>
       <!-- 右侧：上传 + 映射 -->
@@ -191,6 +223,25 @@ async function submit() {
           </div>
         </template>
         <p v-else class="muted hint">先在左侧选择数据类型，再上传文件</p>
+
+        <!-- 最近导入 -->
+        <template v-if="history.length">
+          <h3>最近导入</h3>
+          <div class="card table">
+            <div class="tr hist th">
+              <span>文件</span>
+              <span>类型</span>
+              <span>行数</span>
+              <span>时间</span>
+            </div>
+            <div v-for="h in history" :key="h.id" class="tr hist">
+              <span class="col">{{ h.original_filename }}</span>
+              <span class="muted">{{ h.type_code }}</span>
+              <span>{{ h.row_count }}</span>
+              <span class="muted">{{ h.created_at }}</span>
+            </div>
+          </div>
+        </template>
       </main>
     </div>
   </div>
@@ -310,6 +361,10 @@ h3 {
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid #1a2940;
+}
+
+.tr.hist {
+  grid-template-columns: 2fr 1fr 0.6fr 1.5fr;
 }
 
 .tr:last-child {
