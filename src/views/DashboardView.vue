@@ -293,14 +293,21 @@ function fmt(v: number | string, unit: string) {
 function go(path: string) {
   router.push(`/projects/${projectId}${path}`)
 }
+
+function backToProjects() {
+  router.push('/projects')
+}
 </script>
 
 <template>
   <div class="page">
     <header class="topbar">
       <div class="brand">
-        <div class="cn">友好型源网荷储一体化规划配置仿真平台</div>
-        <div class="en">SOURCE-GRID-LOAD-STORAGE INTEGRATED PLANNING &amp; SIMULATION</div>
+        <div class="brand-text">
+          <div class="cn">友好型源网荷储一体化规划配置仿真平台</div>
+          <div class="en">SOURCE-GRID-LOAD-STORAGE INTEGRATED PLANNING &amp; SIMULATION</div>
+        </div>
+        <button class="back" title="返回项目列表" @click="backToProjects()">&lt;</button>
       </div>
       <div class="kpis" v-if="summary">
         <div v-for="k in summary.kpi" :key="k.key" class="kpi" :title="k.caliber">
@@ -392,6 +399,12 @@ function go(path: string) {
   padding: 0 4px;
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .brand .cn {
   font-size: 19px;
   font-weight: 600;
@@ -402,6 +415,12 @@ function go(path: string) {
   font-size: 10px;
   color: #7f90aa;
   letter-spacing: 1px;
+}
+
+.back {
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1;
 }
 
 .kpis {
