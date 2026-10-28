@@ -1,35 +1,79 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { marked } from 'marked'
 import { useRoute, useRouter } from 'vue-router'
+
+import { createReport, REPORT_SECTIONS } from '@/api/reports'
 
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.id
 
-const templates = ['标准规划报告', '经济性分析报告', '碳减排评估报告', '友好性评价报告']
-const chapters = [
-  '项目概况',
-  '基础数据说明',
-  '资源条件分析',
-  '负荷特性分析',
-  '建模方法说明',
-  '容量优化结果',
-  '运行仿真结果',
-  '经济性分析',
-  '低碳效益分析',
-  '友好性评价',
-  '敏感性分析',
-  '推荐配置方案',
-  '风险与建议',
-]
+const title = ref('华东沿海工业园源网荷储一体化示范项目 · 规划报告')
+const format = ref('md')
+const selected = ref<string[]>([])
+const markdown = ref('')
+const filename = ref('')
+const loading = ref(false)
+const error = ref('')
 
-const activeTemplate = ref(templates[0])
-const checked = ref<string[]>(['项目概况', '容量优化结果', '运行仿真结果'])
+const dragIndex = ref<number | null>(null)
 
-function toggle(name: string) {
-  const i = checked.value.indexOf(name)
-  if (i >= 0) checked.value.splice(i, 1)
-  else checked.value.push(name)
+const unselected = computed(() => REPORT_SECTIONS.filter((s) => !selected.value.includes(s.key)))
+const html = computed(() => (markdown.value ? (marked.parse(markdown.value) as string) : ''))
+
+function nameOf(key: string) {
+  return REPORT_SECTIONS.find((s) => s.key === key)?.name ?? key
+}
+
+function addSection(key: string) {
+  if (!selected.value.includes(key)) selected.value.push(key)
+}
+
+function removeSection(index: number) {
+  selected.value.splice(index, 1)
+}
+
+function onDragStart(index: number) {
+  dragIndex.value = index
+}
+
+function onDrop(index: number) {
+  if (dragIndex.value === null || dragIndex.value === index) return
+  const list = selected.value.slice()
+  const [item] = list.splice(dragIndex.value, 1)
+  if (item) list.splice(index, 0, item)
+  selected.value = list
+  dragIndex.value = null
+}
+
+async function generate() {
+  if (!selected.value.length) {
+    error.value = '请先选择章节'
+    return
+  }
+  loading.value = true
+  error.value = ''
+  try {
+    const result = await createReport(title.value, selected.value)
+    markdown.value = result.markdown
+    filename.value = result.filename
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '生成失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+function download() {
+  if (!markdown.value) return
+  const blob = new Blob([markdown.value], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.value || 'report.md'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 function back() {
@@ -46,58 +90,67 @@ function back() {
       </div>
     </header>
 
-    <main class="content">
-      <div class="cols">
-        <section class="col">
-          <h3>报告模板</h3>
-          <div class="card box">
-            <button
-              v-for="t in templates"
-              :key="t"
-              class="tpl"
-              :class="{ active: t === activeTemplate }"
-              @click="activeTemplate = t"
-            >
-              {{ t }}
-            </button>
+    <main class="body">
+      <aside class="col left">
+        <h3>已选章节 <small>拖拽排序，点击移除</small></h3>
+        <div class="picked">
+          <div
+            v-for="(key, i) in selected"
+            :key="key"
+            class="item picked-item"
+            draggable="true"
+            @dragstart="onDragStart(i)"
+            @dragover.prevent
+            @drop="onDrop(i)"
+            @click="removeSection(i)"
+          >
+            <span class="handle">≡</span>{{ nameOf(key) }}
           </div>
-        </section>
+          <p v-if="!selected.length" class="muted small">还没有选择章节</p>
+        </div>
 
-        <section class="col">
-          <h3>内容章节</h3>
-          <div class="card box">
-            <label v-for="c in chapters" :key="c" class="chk">
-              <input type="checkbox" :checked="checked.includes(c)" @change="toggle(c)" />
-              <span>{{ c }}</span>
-            </label>
-          </div>
-        </section>
+        <h3>未选章节 <small>点击加入</small></h3>
+        <div class="unpicked">
+          <button v-for="s in unselected" :key="s.key" class="item" @click="addSection(s.key)">
+            + {{ s.name }}
+          </button>
+        </div>
+      </aside>
 
-        <section class="col preview">
-          <h3>报告预览</h3>
-          <div class="card box a4">
-            <p class="muted">{{ activeTemplate }}</p>
-            <h4>1. 项目概况</h4>
-            <p class="muted small">（预览区，稍后接入后端生成的报告内容）</p>
-            <h4>2. 资源条件分析</h4>
-            <p class="muted small">（表格占位）</p>
-            <h4>3. 容量优化结果</h4>
-            <p class="muted small">（表格占位）</p>
-          </div>
-        </section>
-      </div>
+      <section class="col preview">
+        <h3>预览</h3>
+        <div class="paper" v-html="html"></div>
+        <p v-if="!html" class="empty">选择章节后点击「生成预览」</p>
+      </section>
 
-      <div class="footer">
-        <span class="muted">已选 {{ checked.length }} 个章节</span>
-        <button class="primary" disabled>生成报告（待接入）</button>
-      </div>
+      <aside class="col right">
+        <h3>报告属性</h3>
+        <label class="label">报告标题</label>
+        <input v-model="title" />
+
+        <label class="label">输出格式</label>
+        <label class="fmt"><input v-model="format" type="radio" value="md" /> Markdown</label>
+        <label class="fmt disabled"><input type="radio" value="pdf" disabled /> PDF（暂不可用）</label>
+        <label class="fmt disabled"><input type="radio" value="word" disabled /> Word（暂不可用）</label>
+
+        <p v-if="error" class="err">{{ error }}</p>
+
+        <div class="actions">
+          <button class="primary" :disabled="loading" @click="generate">
+            {{ loading ? '生成中…' : '生成预览' }}
+          </button>
+          <button :disabled="!markdown" @click="download">下载报告</button>
+        </div>
+      </aside>
     </main>
   </div>
 </template>
 
 <style scoped>
 .page {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
@@ -115,69 +168,164 @@ function back() {
   gap: 12px;
 }
 
-.content {
-  padding: 20px;
-}
-
-.cols {
+.body {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 220px 240px 1fr;
-  gap: 16px;
-}
-
-h3 {
-  font-size: 13px;
-  margin: 0 0 10px;
-  color: #9fb0c9;
-}
-
-.box {
+  grid-template-columns: 280px 1fr 300px;
+  gap: 12px;
   padding: 12px;
 }
 
-.tpl {
+.col {
+  background: #101c30;
+  border: 1px solid #1f2f47;
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.col h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #9fb0c9;
+}
+
+.col h3 small {
+  font-size: 10px;
+  color: #6f819c;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.item {
   display: block;
   width: 100%;
   text-align: left;
-  margin-bottom: 8px;
-}
-
-.tpl.active {
-  border-color: #2aa387;
-  background: #12312b;
-}
-
-.chk {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 0;
-  font-size: 13px;
+  margin-bottom: 6px;
+  padding: 7px 10px;
+  background: #0f1a2c;
+  border: 1px solid #23344e;
+  border-radius: 6px;
+  color: #dbe3f0;
+  font-size: 12px;
   cursor: pointer;
 }
 
-.chk input {
-  width: auto;
+.picked-item {
+  cursor: grab;
 }
 
-.a4 {
-  min-height: 420px;
-  line-height: 1.7;
+.handle {
+  color: #6f819c;
+  margin-right: 6px;
 }
 
-.a4 h4 {
-  font-size: 14px;
-  margin: 16px 0 4px;
+.unpicked {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.small {
+.preview {
+  background: #0b1220;
+}
+
+.paper {
+  flex: 1;
+  min-height: 0;
+  background: #fff;
+  color: #222;
+  border-radius: 6px;
+  padding: 24px 28px;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.paper :deep(h1) {
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+
+.paper :deep(h2) {
+  font-size: 16px;
+  margin: 18px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #eee;
+}
+
+.paper :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.paper :deep(th),
+.paper :deep(td) {
+  border: 1px solid #ddd;
+  padding: 4px 8px;
   font-size: 12px;
 }
 
-.footer {
+.paper :deep(th) {
+  background: #f5f5f5;
+}
+
+.paper :deep(ul),
+.paper :deep(ol) {
+  padding-left: 20px;
+}
+
+.paper :deep(blockquote) {
+  margin: 8px 0;
+  padding: 6px 12px;
+  border-left: 3px solid #ccc;
+  color: #666;
+  background: #fafafa;
+}
+
+.empty {
+  color: #4a5f7d;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.label {
+  font-size: 11px;
+  color: #7f90aa;
+  margin: 12px 0 5px;
+}
+
+.fmt {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 16px;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.fmt input {
+  width: auto;
+}
+
+.fmt.disabled {
+  color: #5a6a80;
+}
+
+.actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.err {
+  color: #ff7a7a;
+  font-size: 12px;
 }
 </style>
