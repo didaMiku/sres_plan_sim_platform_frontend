@@ -6,9 +6,11 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   fetchDay,
   fetchDay15,
+  fetchForecast,
   fetchSummary,
   type DashboardDay,
   type DashboardDay15,
+  type DashboardForecast,
   type DashboardSummary,
 } from '@/api/dashboard'
 
@@ -19,6 +21,7 @@ const projectId = route.params.id
 const summary = ref<DashboardSummary | null>(null)
 const day = ref<DashboardDay | null>(null)
 const day15 = ref<DashboardDay15 | null>(null)
+const forecastData = ref<DashboardForecast | null>(null)
 const error = ref('')
 const loading = ref(true)
 
@@ -221,20 +224,16 @@ function optionTypical(d: DashboardDay15): echarts.EChartsOption {
   } as echarts.EChartsOption
 }
 
-function optionMl(d: DashboardDay): echarts.EChartsOption {
+function optionMl(f: DashboardForecast): echarts.EChartsOption {
   return {
-    title: {
-      text: '模型待接入',
-      left: 'center',
-      top: 'middle',
-      textStyle: { color: '#4a5f7d', fontSize: 12, fontWeight: 'normal' },
-    },
     tooltip: { trigger: 'axis' },
-    grid: { left: 42, right: 14, top: 20, bottom: 22 },
-    xAxis: { type: 'category', data: d.hours, ...axis },
+    legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
+    grid: { left: 42, right: 14, top: 28, bottom: 22 },
+    xAxis: { type: 'category', data: f.hours, ...axis },
     yAxis: { ...yAxisBase, name: 'MW' },
     series: [
-      { name: '实际负荷', type: 'line', data: d.balance.load, smooth: true, symbol: 'none', lineStyle: { color: C.load, width: 2 } },
+      { name: '实际负荷', type: 'line', data: f.actual, smooth: true, symbol: 'none', lineStyle: { color: C.load, width: 2 } },
+      { name: '预测负荷', type: 'line', data: f.predicted, smooth: true, symbol: 'none', lineStyle: { color: C.net, width: 2, type: 'dashed' } },
     ],
   } as echarts.EChartsOption
 }
@@ -253,7 +252,7 @@ function renderCharts() {
   setChart(bessEl.value, optionBess(d), 'bess')
   setChart(balanceEl.value, optionBalance(d), 'balance')
   setChart(exchangeEl.value, optionExchange(d), 'exchange')
-  setChart(mlEl.value, optionMl(d), 'ml')
+  if (forecastData.value) setChart(mlEl.value, optionMl(forecastData.value), 'ml')
 
   const d15 = day15.value
   if (d15?.available) setChart(typicalEl.value, optionTypical(d15), 'typical')
@@ -265,10 +264,11 @@ function onResize() {
 
 onMounted(async () => {
   try {
-    const [s, d, d15] = await Promise.all([fetchSummary(), fetchDay(), fetchDay15()])
+    const [s, d, d15, f] = await Promise.all([fetchSummary(), fetchDay(), fetchDay15(), fetchForecast()])
     summary.value = s
     day.value = d
     day15.value = d15
+    forecastData.value = f
     await nextTick()
     renderCharts()
   } catch (e) {
@@ -354,7 +354,7 @@ function backToProjects() {
         <div v-else class="empty">该日期没有 15 分钟数据</div>
       </div>
       <div class="card col3 r3">
-        <h3>负荷预测 <small>Load Forecast · ML</small></h3>
+        <h3>负荷预测 <small>{{ forecastData?.model }} · MAE {{ forecastData?.metrics.mae }} MW · R² {{ forecastData?.metrics.r2 }}</small></h3>
         <div ref="mlEl" class="chart"></div>
       </div>
     </main>

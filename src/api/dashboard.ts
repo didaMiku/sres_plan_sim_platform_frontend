@@ -100,3 +100,30 @@ export function fetchDay15(date?: string) {
   const query = date ? `?date=${date}` : ''
   return request<DashboardDay15>(`/api/dashboard/day-15${query}`)
 }
+
+// 负荷预测的误差指标
+export interface ForecastMetrics {
+  mae: number
+  rmse: number
+  mape: number
+  r2: number
+}
+
+// 某一天的负荷预测
+export interface DashboardForecast {
+  date: string
+  hours: string[]
+  actual: number[]
+  predicted: number[]
+  model: string
+  metrics: ForecastMetrics
+  train_start: string
+  train_end: string
+  train_rows: number
+  placeholder: boolean
+}
+
+export function fetchForecast(date?: string) {
+  const query = date ? `?date=${date}` : ''
+  return request<DashboardForecast>(`/api/dashboard/forecast${query}`)
+}
