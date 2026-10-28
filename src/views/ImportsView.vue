@@ -262,6 +262,12 @@ async function submit() {
   border-bottom: 1px solid #1f2f47;
 }
 
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .body {
   flex: 1;
   display: flex;
