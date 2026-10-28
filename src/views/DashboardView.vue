@@ -22,6 +22,8 @@ const summary = ref<DashboardSummary | null>(null)
 const day = ref<DashboardDay | null>(null)
 const day15 = ref<DashboardDay15 | null>(null)
 const forecastData = ref<DashboardForecast | null>(null)
+const windForecast = ref<DashboardForecast | null>(null)
+const pvForecast = ref<DashboardForecast | null>(null)
 const error = ref('')
 const loading = ref(true)
 
@@ -58,57 +60,65 @@ const yAxisBase = {
   splitLine: { lineStyle: { color: '#1a2940' } },
 }
 
-function optionWind(d: DashboardDay): echarts.EChartsOption {
+function optionWind(d: DashboardDay, f: DashboardForecast | null): echarts.EChartsOption {
+  const series: Record<string, unknown>[] = [
+    {
+      name: '实际出力',
+      type: 'line',
+      data: d.wind.actual,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color: C.wind, width: 2.2 },
+    },
+  ]
+  if (f) {
+    series.push({
+      name: '预测出力',
+      type: 'line',
+      data: f.predicted,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color: C.net, width: 1.8, type: 'dashed' },
+    })
+  }
   return {
     tooltip: { trigger: 'axis' },
     legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
     grid: { left: 42, right: 14, top: 28, bottom: 22 },
     xAxis: { type: 'category', data: d.hours, ...axis },
     yAxis: { ...yAxisBase, max: d.wind.capacity },
-    series: [
-      {
-        name: '实际出力',
-        type: 'line',
-        data: d.wind.actual,
-        smooth: true,
-        symbol: 'none',
-        lineStyle: { color: C.wind, width: 2.2 },
-      },
-      {
-        name: `装机 ${d.wind.capacity} MW`,
-        type: 'line',
-        data: d.hours.map(() => d.wind.capacity),
-        symbol: 'none',
-        lineStyle: { color: '#7f90aa', width: 1, type: 'dashed' },
-      },
-    ],
+    series,
   } as echarts.EChartsOption
 }
 
-function optionPv(d: DashboardDay): echarts.EChartsOption {
+function optionPv(d: DashboardDay, f: DashboardForecast | null): echarts.EChartsOption {
+  const series: Record<string, unknown>[] = [
+    {
+      name: '实际出力',
+      type: 'line',
+      data: d.pv.actual,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color: C.pv, width: 2.2 },
+    },
+  ]
+  if (f) {
+    series.push({
+      name: '预测出力',
+      type: 'line',
+      data: f.predicted,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color: C.net, width: 1.8, type: 'dashed' },
+    })
+  }
   return {
     tooltip: { trigger: 'axis' },
     legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
     grid: { left: 42, right: 14, top: 28, bottom: 22 },
     xAxis: { type: 'category', data: d.hours, ...axis },
     yAxis: { ...yAxisBase, max: d.pv.capacity + 10 },
-    series: [
-      {
-        name: '实际出力',
-        type: 'line',
-        data: d.pv.actual,
-        smooth: true,
-        symbol: 'none',
-        lineStyle: { color: C.pv, width: 2.2 },
-      },
-      {
-        name: `装机 ${d.pv.capacity} MW`,
-        type: 'line',
-        data: d.hours.map(() => d.pv.capacity),
-        symbol: 'none',
-        lineStyle: { color: '#7f90aa', width: 1, type: 'dashed' },
-      },
-    ],
+    series,
   } as echarts.EChartsOption
 }
 
@@ -247,8 +257,8 @@ function setChart(el: HTMLDivElement | undefined, option: echarts.EChartsOption,
 function renderCharts() {
   const d = day.value
   if (!d) return
-  setChart(windEl.value, optionWind(d), 'wind')
-  setChart(pvEl.value, optionPv(d), 'pv')
+  setChart(windEl.value, optionWind(d, windForecast.value), 'wind')
+  setChart(pvEl.value, optionPv(d, pvForecast.value), 'pv')
   setChart(bessEl.value, optionBess(d), 'bess')
   setChart(balanceEl.value, optionBalance(d), 'balance')
   setChart(exchangeEl.value, optionExchange(d), 'exchange')
@@ -264,11 +274,20 @@ function onResize() {
 
 onMounted(async () => {
   try {
-    const [s, d, d15, f] = await Promise.all([fetchSummary(), fetchDay(), fetchDay15(), fetchForecast()])
+    const [s, d, d15] = await Promise.all([fetchSummary(), fetchDay(), fetchDay15()])
     summary.value = s
     day.value = d
     day15.value = d15
-    forecastData.value = f
+
+    const date = d.date
+    const [lf, wf, pf] = await Promise.all([
+      fetchForecast('load', date).catch(() => null),
+      fetchForecast('wind', date).catch(() => null),
+      fetchForecast('pv', date).catch(() => null),
+    ])
+    forecastData.value = lf
+    windForecast.value = wf
+    pvForecast.value = pf
     await nextTick()
     renderCharts()
   } catch (e) {
@@ -327,11 +346,11 @@ function backToProjects() {
 
     <main class="main">
       <div class="card col1 r1">
-        <h3>风电出力曲线 <small>Wind · 装机 {{ day?.wind.capacity }} MW</small></h3>
+        <h3>风电出力曲线 <small>Wind · 装机 {{ day?.wind.capacity }} MW · 预测 MAE {{ windForecast?.metrics.mae }} MW</small></h3>
         <div ref="windEl" class="chart"></div>
       </div>
       <div class="card col1 r2">
-        <h3>光伏出力曲线 <small>Solar · 装机 {{ day?.pv.capacity }} MW</small></h3>
+        <h3>光伏出力曲线 <small>Solar · 装机 {{ day?.pv.capacity }} MW · 预测 MAE {{ pvForecast?.metrics.mae }} MW</small></h3>
         <div ref="pvEl" class="chart"></div>
       </div>
       <div class="card col1 r3">

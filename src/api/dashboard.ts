@@ -101,7 +101,7 @@ export function fetchDay15(date?: string) {
   return request<DashboardDay15>(`/api/dashboard/day-15${query}`)
 }
 
-// 负荷预测的误差指标
+// 负荷、风电、光伏的误差指标
 export interface ForecastMetrics {
   mae: number
   rmse: number
@@ -109,8 +109,10 @@ export interface ForecastMetrics {
   r2: number
 }
 
-// 某一天的负荷预测
+// 某一天的负荷或出力预测
 export interface DashboardForecast {
+  target: string
+  target_name: string
   date: string
   hours: string[]
   actual: number[]
@@ -123,7 +125,8 @@ export interface DashboardForecast {
   placeholder: boolean
 }
 
-export function fetchForecast(date?: string) {
-  const query = date ? `?date=${date}` : ''
-  return request<DashboardForecast>(`/api/dashboard/forecast${query}`)
+export function fetchForecast(target = 'load', date?: string) {
+  const params = new URLSearchParams({ target })
+  if (date) params.set('date', date)
+  return request<DashboardForecast>(`/api/dashboard/forecast?${params.toString()}`)
 }
