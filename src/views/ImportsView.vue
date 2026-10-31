@@ -254,40 +254,50 @@ async function submit() {
 }
 
 .topbar {
-  height: 56px;
-  padding: 0 20px;
+  height: 64px;
+  padding: 0 clamp(18px, 3.4vw, 58px);
   display: flex;
   align-items: center;
-  background: #0e1729;
-  border-bottom: 1px solid #1f2f47;
+  background: transparent;
+  border-bottom: 1px solid var(--rule);
 }
 
 .left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+}
+
+.left strong {
+  font-family: var(--f-zh);
+  font-size: 15px;
+  letter-spacing: 0.14em;
 }
 
 .body {
   flex: 1;
   display: flex;
   gap: 16px;
-  padding: 16px;
+  padding: 16px clamp(18px, 3.4vw, 58px) 28px;
   min-height: 0;
 }
 
 .sidebar {
   width: 240px;
   flex: 0 0 240px;
-  padding: 12px;
-  background: #101c30;
-  border: 1px solid #1f2f47;
-  border-radius: 10px;
+  padding: 14px;
+  background: var(--paper-hi);
+  border: 1px solid var(--rule);
+  border-radius: 0;
   align-self: flex-start;
 }
 
 .side-title {
-  font-size: 12px;
+  font-family: var(--f-tech);
+  font-size: 9.5px;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--ink-4);
   margin: 0 0 10px 4px;
 }
 
@@ -298,24 +308,30 @@ async function submit() {
   margin-bottom: 8px;
   padding: 10px 12px;
   background: transparent;
-  border: 1px solid #1f2f47;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+}
+
+.type-item:hover {
+  background: rgba(26, 26, 24, 0.05);
 }
 
 .type-item.active {
-  border-color: #2aa387;
-  background: #102b26;
+  border-color: var(--ink);
+  background: var(--paper-lo);
 }
 
 .type-name {
   display: block;
   font-size: 13px;
-  color: #dbe3f0;
+  color: var(--ink);
 }
 
 .type-desc {
   display: block;
   font-size: 11px;
   margin-top: 3px;
+  color: var(--ink-4);
 }
 
 .main {
@@ -340,10 +356,17 @@ async function submit() {
 .btn {
   display: inline-block;
   padding: 8px 14px;
-  border: 1px solid #2aa387;
-  border-radius: 6px;
-  color: #5ee0c0;
+  border: 1px solid var(--ink);
+  color: var(--ink);
   cursor: pointer;
+  font-family: var(--f-tech);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.btn:hover {
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .small {
@@ -353,6 +376,8 @@ async function submit() {
 h3 {
   font-size: 14px;
   margin: 0 0 4px;
+  font-family: var(--f-zh);
+  letter-spacing: 0.1em;
 }
 
 .table {
@@ -366,7 +391,7 @@ h3 {
   gap: 12px;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #1a2940;
+  border-bottom: 1px solid var(--rule);
 }
 
 .tr.hist {
@@ -378,13 +403,17 @@ h3 {
 }
 
 .th {
-  font-size: 12px;
-  color: #9fb0c9;
+  font-family: var(--f-tech);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
 }
 
 .col {
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--f-tech);
   font-size: 12px;
+  letter-spacing: 0.02em;
 }
 
 .sample {
@@ -396,10 +425,10 @@ h3 {
 
 select {
   font: inherit;
-  background: #0f1a2c;
-  color: #dbe3f0;
-  border: 1px solid #2a3a55;
-  border-radius: 6px;
+  background: var(--paper-hi);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 0;
   padding: 7px 9px;
   width: 100%;
 }
@@ -412,13 +441,13 @@ select {
 }
 
 .err {
-  color: #ff7a7a;
+  color: var(--red);
   font-size: 13px;
   margin: 12px 0 0;
 }
 
 .ok {
-  color: #5ee0c0;
+  color: var(--teal);
   font-size: 13px;
   margin: 12px 0 0;
 }

@@ -38,26 +38,26 @@ const mlEl = ref<HTMLDivElement>()
 const charts: Record<string, echarts.ECharts> = {}
 
 const C = {
-  wind: '#4a90d9',
-  pv: '#f2c31a',
-  bess: '#8e6bbf',
-  buy: '#e8836a',
-  load: '#5ee0c0',
-  price: '#f2c31a',
-  sell: '#3f5f8f',
-  net: '#e8836a',
+  wind: '#a03224',
+  pv: '#f5a634',
+  bess: '#7db8ad',
+  buy: '#c1663f',
+  load: '#1a1a18',
+  price: '#c08a35',
+  sell: '#7c9784',
+  net: '#8e2e22',
 }
 
 const axis = {
-  axisLabel: { color: '#7f90aa', fontSize: 10 },
-  axisLine: { lineStyle: { color: '#23344e' } },
+  axisLabel: { color: '#4a4842', fontSize: 10 },
+  axisLine: { lineStyle: { color: 'rgba(26, 26, 24, 0.35)' } },
 }
 
 const yAxisBase = {
   type: 'value' as const,
-  nameTextStyle: { color: '#7f90aa' },
-  axisLabel: { color: '#7f90aa', fontSize: 10 },
-  splitLine: { lineStyle: { color: '#1a2940' } },
+  nameTextStyle: { color: '#4a4842' },
+  axisLabel: { color: '#4a4842', fontSize: 10 },
+  splitLine: { lineStyle: { color: 'rgba(26, 26, 24, 0.12)' } },
 }
 
 function optionWind(d: DashboardDay, f: DashboardForecast | null): echarts.EChartsOption {
@@ -83,7 +83,7 @@ function optionWind(d: DashboardDay, f: DashboardForecast | null): echarts.EChar
   }
   return {
     tooltip: { trigger: 'axis' },
-    legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
+    legend: { textStyle: { color: '#4a4842', fontSize: 10 }, top: 0 },
     grid: { left: 42, right: 14, top: 28, bottom: 22 },
     xAxis: { type: 'category', data: d.hours, ...axis },
     yAxis: { ...yAxisBase, max: d.wind.capacity },
@@ -114,7 +114,7 @@ function optionPv(d: DashboardDay, f: DashboardForecast | null): echarts.ECharts
   }
   return {
     tooltip: { trigger: 'axis' },
-    legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
+    legend: { textStyle: { color: '#4a4842', fontSize: 10 }, top: 0 },
     grid: { left: 42, right: 14, top: 28, bottom: 22 },
     xAxis: { type: 'category', data: d.hours, ...axis },
     yAxis: { ...yAxisBase, max: d.pv.capacity + 10 },
@@ -125,12 +125,12 @@ function optionPv(d: DashboardDay, f: DashboardForecast | null): echarts.ECharts
 function optionBess(d: DashboardDay): echarts.EChartsOption {
   return {
     tooltip: { trigger: 'axis' },
-    legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
+    legend: { textStyle: { color: '#4a4842', fontSize: 10 }, top: 0 },
     grid: { left: 42, right: 38, top: 28, bottom: 22 },
     xAxis: { type: 'category', data: d.hours, ...axis },
     yAxis: [
       { ...yAxisBase, name: 'MW' },
-      { type: 'value', name: 'SOC', min: 0, max: 1, axisLabel: { color: '#7f90aa', fontSize: 10 }, splitLine: { show: false } },
+      { type: 'value', name: 'SOC', min: 0, max: 1, axisLabel: { color: '#4a4842', fontSize: 10 }, splitLine: { show: false } },
     ],
     series: [
       {
@@ -157,7 +157,7 @@ function optionBess(d: DashboardDay): echarts.EChartsOption {
 function optionBalance(d: DashboardDay): echarts.EChartsOption {
   return {
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    legend: { textStyle: { color: '#9fb0c9', fontSize: 11 }, top: 0 },
+    legend: { textStyle: { color: '#4a4842', fontSize: 11 }, top: 0 },
     grid: { left: 48, right: 24, top: 40, bottom: 26 },
     xAxis: { type: 'category', data: d.hours, ...axis },
     yAxis: { ...yAxisBase, name: 'MW' },
@@ -183,12 +183,12 @@ function optionBalance(d: DashboardDay): echarts.EChartsOption {
 function optionExchange(d: DashboardDay): echarts.EChartsOption {
   return {
     tooltip: { trigger: 'axis' },
-    legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
-    grid: { left: 42, right: 44, top: 28, bottom: 22 },
+    legend: { textStyle: { color: '#4a4842', fontSize: 10 }, top: 0 },
+    grid: { left: 42, right: 44, top: 38, bottom: 22 },
     xAxis: { type: 'category', data: d.hours, ...axis },
     yAxis: [
       { ...yAxisBase, name: 'MW' },
-      { type: 'value', name: '元/kWh', min: 0, max: 1.2, axisLabel: { color: '#7f90aa', fontSize: 10 }, splitLine: { show: false } },
+      { type: 'value', min: 0, max: 1.2, axisLabel: { color: '#4a4842', fontSize: 10 }, splitLine: { show: false } },
     ],
     series: [
       { name: '外网购电', type: 'bar', data: d.exchange.buy, itemStyle: { color: C.buy }, barMaxWidth: 10 },
@@ -209,12 +209,12 @@ function optionExchange(d: DashboardDay): echarts.EChartsOption {
 function optionTypical(d: DashboardDay15): echarts.EChartsOption {
   return {
     tooltip: { trigger: 'axis' },
-    legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
+    legend: { textStyle: { color: '#4a4842', fontSize: 10 }, top: 0 },
     grid: { left: 42, right: 16, top: 28, bottom: 22 },
     xAxis: {
       type: 'category',
       data: d.points.map((p) => p.ts),
-      axisLabel: { color: '#7f90aa', fontSize: 9, interval: 7 },
+      axisLabel: { color: '#4a4842', fontSize: 9, interval: 7 },
       axisLine: { lineStyle: { color: '#23344e' } },
     },
     yAxis: { ...yAxisBase, name: 'MW' },
@@ -237,7 +237,7 @@ function optionTypical(d: DashboardDay15): echarts.EChartsOption {
 function optionMl(f: DashboardForecast): echarts.EChartsOption {
   return {
     tooltip: { trigger: 'axis' },
-    legend: { textStyle: { color: '#9fb0c9', fontSize: 10 }, top: 0 },
+    legend: { textStyle: { color: '#4a4842', fontSize: 10 }, top: 0 },
     grid: { left: 42, right: 14, top: 28, bottom: 22 },
     xAxis: { type: 'category', data: f.hours, ...axis },
     yAxis: { ...yAxisBase, name: 'MW' },
@@ -405,46 +405,49 @@ function backToProjects() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 12px clamp(18px, 3.4vw, 58px) 14px;
   box-sizing: border-box;
 }
 
 .topbar {
-  height: 56px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #1f2f47;
-  padding: 0 4px;
+  border-bottom: 1px solid var(--rule);
+  padding: 0;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .brand .cn {
-  font-size: 19px;
+  font-family: var(--f-zh);
+  font-size: 16px;
   font-weight: 600;
-  color: #eaf2ff;
+  letter-spacing: 0.1em;
+  color: var(--ink);
 }
 
 .brand .en {
-  font-size: 10px;
-  color: #7f90aa;
-  letter-spacing: 1px;
+  font-family: var(--f-tech);
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  color: var(--ink-4);
 }
 
 .back {
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 6px 10px;
+  font-size: 13px;
   line-height: 1;
 }
 
 .kpis {
   display: flex;
-  gap: 26px;
+  gap: 30px;
 }
 
 .kpi {
@@ -453,21 +456,27 @@ function backToProjects() {
 
 .kpi b {
   display: block;
-  font-size: 22px;
-  color: #5ee0c0;
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
 }
 
 .kpi span {
-  font-size: 10px;
-  color: #9fb0c9;
+  font-family: var(--f-tech);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ink-4);
 }
 
 .meta {
   text-align: right;
-  font-size: 11px;
-  color: #7f90aa;
-  line-height: 1.6;
+  font-family: var(--f-tech);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--ink-4);
+  line-height: 1.7;
 }
 
 .right {
@@ -486,9 +495,9 @@ function backToProjects() {
 }
 
 .card {
-  background: #101c30;
-  border: 1px solid #1f2f47;
-  border-radius: 8px;
+  background: var(--paper-hi);
+  border: 1px solid var(--rule);
+  border-radius: 0;
   padding: 6px 8px 4px;
   display: flex;
   flex-direction: column;
@@ -497,16 +506,20 @@ function backToProjects() {
 
 .card h3 {
   margin: 0 0 2px;
-  font-size: 12px;
+  font-family: var(--f-zh);
+  font-size: 11px;
   font-weight: 600;
-  color: #cfe0f7;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
 }
 
 .card h3 small {
-  color: #6f819c;
+  font-family: var(--f-tech);
+  color: var(--ink-4);
   font-weight: 400;
-  font-size: 9px;
+  font-size: 8.5px;
   margin-left: 4px;
+  letter-spacing: 0.1em;
 }
 
 .chart {
@@ -554,9 +567,9 @@ function backToProjects() {
 }
 
 .stat {
-  background: #101c30;
-  border: 1px solid #1f2f47;
-  border-radius: 8px;
+  background: var(--paper-hi);
+  border: 1px solid var(--rule);
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -564,13 +577,17 @@ function backToProjects() {
 }
 
 .stat b {
-  font-size: 18px;
-  color: #eaf2ff;
+  font-family: var(--f-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .stat span {
-  font-size: 11px;
-  color: #7f90aa;
+  font-family: var(--f-tech);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--ink-4);
   margin-top: 3px;
 }
 
@@ -582,33 +599,36 @@ function backToProjects() {
 }
 
 .ind {
-  background: #101c30;
-  border: 1px solid #1f2f47;
-  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 0;
   display: flex;
   align-items: center;
   gap: 7px;
   padding: 0 10px;
-  font-size: 10px;
-  color: #9fb0c9;
+  font-family: var(--f-tech);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
 }
 
 .ind .bar {
   flex: 1;
-  height: 6px;
-  background: #1a2940;
-  border-radius: 3px;
+  height: 5px;
+  background: rgba(26, 26, 24, 0.12);
+  border-radius: 0;
   overflow: hidden;
 }
 
 .ind .bar i {
   display: block;
   height: 100%;
-  background: #2aa387;
+  background: var(--amber);
 }
 
 .ind b {
-  color: #dbe3f0;
+  font-family: var(--f-display);
+  color: var(--ink);
   font-size: 10px;
   min-width: 36px;
   text-align: right;
@@ -619,7 +639,7 @@ function backToProjects() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4a5f7d;
+  color: var(--ink-4);
   font-size: 12px;
 }
 
@@ -629,13 +649,15 @@ function backToProjects() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(11, 18, 32, 0.75);
-  color: #9fb0c9;
-  font-size: 14px;
+  background: rgba(242, 235, 220, 0.82);
+  color: var(--ink-3);
+  font-family: var(--f-tech);
+  font-size: 12px;
+  letter-spacing: 0.16em;
   z-index: 10;
 }
 
 .mask.error {
-  color: #ff7a7a;
+  color: var(--red);
 }
 </style>
