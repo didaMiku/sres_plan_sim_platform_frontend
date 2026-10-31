@@ -31,9 +31,19 @@ async function submit() {
 
 <template>
   <div class="wrap">
-    <form class="card box" @submit.prevent="submit">
-      <h1>友好型源网荷储一体化<br />规划配置仿真平台</h1>
-      <p class="muted sub">管理员登录</p>
+    <section class="poster">
+      <div class="brandline">
+        <span class="micro">SOURCE · GRID · LOAD · STORAGE</span>
+        <span class="micro">№ 2026—04</span>
+      </div>
+      <h1 class="display">Aphelion</h1>
+      <p class="cn">友好型源网荷储一体化规划配置仿真平台</p>
+      <div class="trio"><i></i><i></i><i></i></div>
+    </section>
+
+    <form class="box" @submit.prevent="submit">
+      <p class="micro">ADMIN ACCESS</p>
+      <h2>管理员登录</h2>
 
       <label>用户名</label>
       <input v-model="username" autocomplete="username" />
@@ -47,7 +57,7 @@ async function submit() {
         {{ loading ? '登录中…' : '登录' }}
       </button>
 
-      <p class="muted tip">默认账号：admin / 1234</p>
+      <p class="micro tip">DEFAULT — ADMIN / 1234</p>
     </form>
   </div>
 </template>
@@ -55,50 +65,147 @@ async function submit() {
 <style scoped>
 .wrap {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+}
+
+.poster {
+  padding: clamp(36px, 5vw, 72px);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 50% 0%, #14243d 0%, #0b1220 60%);
+  flex-direction: column;
+  justify-content: flex-end;
+  border-right: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.brandline {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-4);
+  margin-bottom: auto;
+}
+
+.micro {
+  font-family: var(--f-tech);
+  font-size: 9.5px;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+}
+
+.display {
+  margin: 0 0 18px;
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: clamp(64px, 10.5vw, 168px);
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+}
+
+.cn {
+  margin: 0 0 26px;
+  font-family: var(--f-zh);
+  font-size: clamp(12px, 1vw, 14px);
+  letter-spacing: 0.26em;
+  color: var(--ink-3);
+}
+
+.trio {
+  display: flex;
+  height: 10px;
+}
+
+.trio i {
+  flex: 1;
+}
+
+.trio i:nth-child(1) {
+  background: var(--red);
+  flex: 1.06;
+}
+
+.trio i:nth-child(2) {
+  background: var(--amber);
+  flex: 1.24;
+}
+
+.trio i:nth-child(3) {
+  background: var(--teal);
 }
 
 .box {
-  width: 380px;
-  padding: 32px 30px;
+  padding: clamp(36px, 6vw, 76px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--paper);
 }
 
-h1 {
-  font-size: 18px;
-  line-height: 1.5;
-  margin: 0 0 6px;
-  color: #eaf2ff;
+.box > .micro {
+  color: var(--ink-4);
+  margin: 0 0 8px;
 }
 
-.sub {
-  margin: 0 0 22px;
+h2 {
+  margin: 0 0 26px;
+  font-family: var(--f-zh);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
 }
 
 label {
   display: block;
   margin: 14px 0 6px;
-  color: #9fb0c9;
-  font-size: 13px;
+  font-family: var(--f-tech);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+input {
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  background: transparent;
+  padding: 8px 0;
+}
+
+input:focus {
+  box-shadow: none;
+  border-bottom-color: var(--amber);
 }
 
 .submit {
   width: 100%;
-  margin-top: 22px;
-  padding: 10px;
+  margin-top: 26px;
+  padding: 11px;
 }
 
 .err {
-  color: #ff7a7a;
+  color: var(--red);
+  font-size: 12px;
   margin: 12px 0 0;
-  font-size: 13px;
 }
 
 .tip {
   text-align: center;
-  margin: 16px 0 0;
-  font-size: 12px;
+  margin: 18px 0 0;
+  color: var(--ink-4);
+}
+
+@media (max-width: 860px) {
+  .wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .poster {
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .display {
+    font-size: clamp(56px, 16vw, 110px);
+  }
 }
 </style>
